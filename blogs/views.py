@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from blogs.serializers import UserSerializer, BlogSerializer, CommentSerializer
+from blogs.serializers import UserSerializer, BlogSerializer, CommentSerializer, LogoutSerializer
 from blogs.models import Blogs, Comments
 from rest_framework import status, permissions
 from rest_framework.viewsets import ViewSet
@@ -19,6 +19,16 @@ class UserViewSetView(ViewSet):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class LogoutViewSetView(ViewSet):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def create(self, request, *args, **kwargs):
+        serializer = LogoutSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class BlogViewSetView(ViewSet):

@@ -1,7 +1,9 @@
 from rest_framework import serializers
-from rest_framework.serializers import ModelSerializer
+from rest_framework.serializers import ModelSerializer, Serializer
+from rest_framework_simplejwt.tokens import RefreshToken, TokenError
 from django.contrib.auth.models import User
 from blogs.models import Blogs, Comments
+from rest_framework.fields import empty
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -29,6 +31,29 @@ class UserSerializer(serializers.ModelSerializer):
             instance.set_password(password)
         instance.save()
         return instance
+
+
+class LogoutSerializer(Serializer):
+    refresh = serializers.CharField()
+
+    default_error_messages = {
+        'bad token': 'Token is expired or invalid'
+    }
+
+    def __init__(self, instance=None, data=empty):
+        super().__init__(instance, data)
+        self.token = None
+
+    def validate(self, attrs):
+        self.token = attrs.get('refresh')
+        return attrs
+
+    def save(self, **kwargs):
+        try:
+            RefreshToken(self.token).blacklist()
+
+        except TokenError:
+            self.fail('bad token')
 
 
 class BlogSerializer(ModelSerializer):
